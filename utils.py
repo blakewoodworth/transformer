@@ -21,8 +21,8 @@ def parse_arguments():
 	argparser.add_argument('--checkpoint_path', default='../checkpoints/', help='Path to checkpoint directory')
 
 	# model hyperparameters
-	argparser.add_argument('--d_model', default=256, help='Model feature dimension')
-	argparser.add_argument('--d_ff', default=1024, help='Model feedforward layer dimension')
+	argparser.add_argument('--d_model', default=512, help='Model feature dimension')
+	argparser.add_argument('--d_ff', default=2048, help='Model feedforward layer dimension')
 	argparser.add_argument('--num_layers', default=4, help='Model number of transformer layers')
 	argparser.add_argument('--num_heads', default=16, help='Model number of attention heads')
 	argparser.add_argument('--embed_pdrop', default=0.0, help='Dropout probability for embedding layer')
@@ -30,7 +30,7 @@ def parse_arguments():
 	argparser.add_argument('--residual_pdrop', default=0.0, help='Dropout probability for residual connections')
 
 	# optimizer hyperparameters
-	argparser.add_argument('--batch_size', default=2, help='Batch size')
+	argparser.add_argument('--batch_size', default=16, help='Batch size')
 	argparser.add_argument('--lr_min', default=1e-8, help='Minimum stepsize')
 	argparser.add_argument('--lr_max', default=1e-2, help='Maximum stepsize')
 	argparser.add_argument('--warmup_steps', default=100, help='Number of warmup steps')
