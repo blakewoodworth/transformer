@@ -21,8 +21,8 @@ def parse_arguments():
 	argparser.add_argument('--checkpoint_path', default='../checkpoints/', help='Path to checkpoint directory')
 
 	# model hyperparameters
-	argparser.add_argument('--d_model', default=512, help='Model feature dimension')
-	argparser.add_argument('--d_ff', default=2048, help='Model feedforward layer dimension')
+	argparser.add_argument('--d_model', default=256, help='Model feature dimension')
+	argparser.add_argument('--d_ff', default=1024, help='Model feedforward layer dimension')
 	argparser.add_argument('--num_layers', default=4, help='Model number of transformer layers')
 	argparser.add_argument('--num_heads', default=16, help='Model number of attention heads')
 	argparser.add_argument('--embed_pdrop', default=0.0, help='Dropout probability for embedding layer')
@@ -30,7 +30,7 @@ def parse_arguments():
 	argparser.add_argument('--residual_pdrop', default=0.0, help='Dropout probability for residual connections')
 
 	# optimizer hyperparameters
-	argparser.add_argument('--batch_size', default=16, help='Batch size')
+	argparser.add_argument('--batch_size', default=2, help='Batch size')
 	argparser.add_argument('--lr_min', default=1e-8, help='Minimum stepsize')
 	argparser.add_argument('--lr_max', default=1e-2, help='Maximum stepsize')
 	argparser.add_argument('--warmup_steps', default=100, help='Number of warmup steps')
@@ -48,7 +48,7 @@ def parse_arguments():
 
 
 
-def save_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, scheduler:torch.optim.lr_scheduler.LRScheduler, outfile:str):
+def save_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, scheduler:torch.optim.lr_scheduler._LRScheduler, outfile:str):
 	all_state = {
 		'model': model.state_dict(),
 		'optimizer': optimizer.state_dict(),
@@ -56,13 +56,13 @@ def save_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, sche
 	}
 	torch.save(all_state, outfile)
 
-def load_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, scheduler:torch.optim.lr_scheduler.LRScheduler, infile:str):
+def load_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, scheduler:torch.optim.lr_scheduler._LRScheduler, infile:str):
 	all_state = torch.load(infile)
 	model.load_state_dict(all_state['model'])
 	optimizer.load_state_dict(all_state['optimizer'])
 	scheduler.load_state_dict(all_state['scheduler'])
 
-class CosineLRWithWarmup(torch.optim.lr_scheduler.LRScheduler):
+class CosineLRWithWarmup(torch.optim.lr_scheduler._LRScheduler):
 	def __init__(self, optimizer:torch.optim.Optimizer, lr_max:float, lr_min:float, warmup_steps:int, total_steps:int, last_epoch=-1, verbose='deprecated'):
 		self.lr_max = lr_max
 		self.lr_min	= lr_min

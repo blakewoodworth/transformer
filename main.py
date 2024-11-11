@@ -28,7 +28,10 @@ model_hyperparameters = {
 	'attn_pdrop': args.attn_pdrop,
 	'residual_pdrop': args.residual_pdrop
 }
-model = torch.compile(TransformerLM(**model_hyperparameters)).to(device)
+# model = torch.compile(TransformerLM(**model_hyperparameters)).to(device)
+model = TransformerLM(**model_hyperparameters).to(device)
+print(f"# model parameters: {sum(p.numel() for p in model.parameters())}")
+
 optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr_min, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
 scheduler = CosineLRWithWarmup(optimizer, args.lr_max, args.lr_min, args.warmup_steps, args.total_steps)
 criterion = torch.nn.CrossEntropyLoss()

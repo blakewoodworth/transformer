@@ -30,8 +30,8 @@ class DataLoader():
 	def get_batch(self):
 		self._batches_gotten += 1
 		idxs = self.random_state.choice(self.n-self.context_length-1, self.batch_size)
-		inputs = torch.IntTensor(np.array([self.dataset[i:i+self.context_length] for i in idxs]))
-		outputs = torch.LongTensor(np.array([self.dataset[i+1:i+self.context_length+1] for i in idxs]))
+		inputs = torch.IntTensor(np.array([self.dataset[i:i+self.context_length] for i in idxs], dtype='int32'))
+		outputs = torch.IntTensor(np.array([self.dataset[i+1:i+self.context_length+1] for i in idxs], dtype='int32'))
 		return inputs, outputs
 
 

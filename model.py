@@ -1,5 +1,16 @@
 import torch
 
+class RMSNorm(torch.nn.Module):
+    def __init__(self, d:int, eps:float=1e-5):
+        super().__init__()
+        self.d = d
+        self.eps = eps
+        self.weight = torch.nn.Parameter(torch.ones(self.d))
+
+    def forward(self, x):
+        rms = torch.sqrt(torch.mean(torch.square(x), dim=-1, keepdim=True) + self.eps)
+        return (x * self.weight) / rms
+
 class FFN(torch.nn.Module):
     def __init__(self, d_model:int, d_ff:int):
         super().__init__()
@@ -10,7 +21,7 @@ class FFN(torch.nn.Module):
         return self.w2(torch.nn.functional.gelu(self.w1(x)))
 
 class CausalMultiheadSelfAttention(torch.nn.Module):
-    def __init__(self, d_model:int, num_heads:int, attn_pdrop:float|None=None):
+    def __init__(self, d_model:int, num_heads:int, attn_pdrop:float=0.0):
         super().__init__()
         self.d_model = d_model
         self.H = num_heads
@@ -35,7 +46,7 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
         return self.output_proj(attention)
 
 class TransformerBlock(torch.nn.Module):
-    def __init__(self, d_model:int, num_heads:int, d_ff:int, attn_pdrop:float|None=None, residual_pdrop:float|None=None):
+    def __init__(self, d_model:int, num_heads:int, d_ff:int, attn_pdrop:float=0.0, residual_pdrop:float=0.0):
         super().__init__()
         self.d_model = d_model
         self.num_heads = num_heads
@@ -43,9 +54,9 @@ class TransformerBlock(torch.nn.Module):
         self.attn_pdrop = attn_pdrop
         self.residual_pdrop = residual_pdrop
 
-        self.rms_1 = torch.nn.RMSNorm(d_model, eps=1e-5)
+        self.rms_1 = RMSNorm(d_model, eps=1e-5)
         self.attn = CausalMultiheadSelfAttention(d_model, num_heads, attn_pdrop)
-        self.rms_2 = torch.nn.RMSNorm(d_model, eps=1e-5)
+        self.rms_2 = RMSNorm(d_model, eps=1e-5)
         self.ffn = FFN(d_model, d_ff)
 
     def forward(self, X:torch.Tensor):
@@ -88,7 +99,7 @@ class TransformerLM(torch.nn.Module):
         self.embedding = PositionalEmbedding(vocab_size, d_model, context_length, embed_pdrop)
 
         self.layers = torch.nn.ModuleList([TransformerBlock(d_model, num_heads, d_ff, attn_pdrop, residual_pdrop) for _ in range(num_layers)])
-        self.rms_out = torch.nn.RMSNorm(d_model, eps=1e-5)
+        self.rms_out = RMSNorm(d_model, eps=1e-5)
         self.out_linear = torch.nn.Linear(d_model, vocab_size, bias=False)
 
     def forward(self, X):
