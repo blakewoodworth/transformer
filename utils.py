@@ -45,9 +45,6 @@ def parse_arguments():
 	return args
 
 
-
-
-
 def save_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, scheduler:torch.optim.lr_scheduler._LRScheduler, outfile:str):
 	all_state = {
 		'model': model.state_dict(),
@@ -63,7 +60,7 @@ def load_checkpoint(model:torch.nn.Module, optimizer:torch.optim.Optimizer, sche
 	scheduler.load_state_dict(all_state['scheduler'])
 
 class CosineLRWithWarmup(torch.optim.lr_scheduler._LRScheduler):
-	def __init__(self, optimizer:torch.optim.Optimizer, lr_max:float, lr_min:float, warmup_steps:int, total_steps:int, last_epoch=-1, verbose='deprecated'):
+	def __init__(self, optimizer:torch.optim.Optimizer, lr_max:float, lr_min:float, warmup_steps:int, total_steps:int, last_epoch=-1, verbose=False):
 		self.lr_max = lr_max
 		self.lr_min	= lr_min
 		self.warmup_steps = warmup_steps
@@ -76,7 +73,7 @@ class CosineLRWithWarmup(torch.optim.lr_scheduler._LRScheduler):
 		if self._step_count < self.warmup_steps:
 			lr = self.lr_min + self._step_count * self.warmup_factor
 		elif self._step_count < self.total_steps:
-			lr = self.lr_min + 0.5*(1 + torch.cos((self._step_count - self.warmup_steps) * self.cos_factor))
+			lr = self.lr_min + 0.5*(1 + math.cos((self._step_count - self.warmup_steps) * self.cos_factor))
 		else:
 			lr = self.lr_min
 		return [lr for group in self.optimizer.param_groups]

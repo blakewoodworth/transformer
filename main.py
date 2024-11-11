@@ -59,12 +59,12 @@ for i in tqdm(range(1,args.total_steps+1)):
 		outfile = checkpoint_path + f'checkpoint{i}.pt'
 		save_checkpoint(model, optimizer, scheduler, outfile)
 
-	if i < 5:
-		if device.type == 'cuda':
-		    print(torch.cuda.get_device_name(0))
-		    print('Memory Usage:')
-		    print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
-		    print('Cached:   ', round(torch.cuda.memory_cached(0)/1024**3,1), 'GB')
+	# if i < 5:
+	# 	if device.type == 'cuda':
+	# 	    print(torch.cuda.get_device_name(0))
+	# 	    print('Memory Usage:')
+	# 	    print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+	# 	    print('Available:', round(torch.cuda.get_device_properties(0).total_memory/1024**3,1), 'GB')
 
 wandb.finish()
 

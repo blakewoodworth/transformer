@@ -55,7 +55,7 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
         self.attn_pdrop = attn_pdrop
         self.context_length = context_length
         self.attn = torch.nn.MultiheadAttention(d_model, num_heads, attn_pdrop, bias=False)
-        self.mask = torch.tril(torch.ones(context_length, context_length))
+        self.mask = torch.tril(torch.ones(context_length, context_length)).to(torch.device('cuda:0'))
 
     def forward(self, X:torch.Tensor):
         Xt = X.transpose(0,1)
