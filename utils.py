@@ -3,6 +3,7 @@ import math
 import argparse
 import os
 import wandb
+from tqdm import tqdm
 from data import DataLoader
 
 def setup_directories():
@@ -34,8 +35,8 @@ def parse_arguments():
 
 	# optimizer hyperparameters
 	argparser.add_argument('--batch_size', type=int, default=24, help='Batch size')
-	argparser.add_argument('--lr_min', type=float, default=1e-6, help='Minimum stepsize')
-	argparser.add_argument('--lr_max', type=float, default=2e-2, help='Maximum stepsize')
+	argparser.add_argument('--lr_min', type=float, default=1e-7, help='Minimum stepsize')
+	argparser.add_argument('--lr_max', type=float, default=6e-4, help='Maximum stepsize')
 	argparser.add_argument('--warmup_steps', type=int, default=100, help='Number of warmup steps')
 	argparser.add_argument('--beta1', type=float, default=0.9, help='AdamW beta1 parameter')
 	argparser.add_argument('--beta2', type=float, default=0.95, help='AdamW beta2 parameter')
