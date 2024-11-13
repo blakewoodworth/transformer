@@ -92,7 +92,7 @@ class SineLR(torch.optim.lr_scheduler._LRScheduler):
 		return [lr for group in self.optimizer.param_groups]
 
 def calculate_perplexity(model, args):
-	testloader = DataLoader(args.test_datafile, args.batch_size, args.context_length, is_test=True)
+	testloader = DataLoader(args.test_datafile, args.batch_size, args.context_length)
 	criterion = torch.nn.CrossEntropyLoss(reduction='none')
 	model.eval()
 	perplexity = 0.

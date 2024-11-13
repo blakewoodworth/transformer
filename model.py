@@ -77,7 +77,8 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
         self.context_length = context_length
         self.attn = torch.nn.MultiheadAttention(d_model, num_heads, attn_pdrop, bias=False)
         device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-        self.mask = torch.tril(torch.ones(context_length, context_length)).to(device)
+        self.mask = torch.torch.triu(torch.ones(context_length, context_length), diagonal=1)>0
+        self.mask = self.mask.to(device)
 
     def forward(self, X:torch.Tensor):
         Xt = X.transpose(0,1)
@@ -144,10 +145,22 @@ class TransformerLM(torch.nn.Module):
             X = layer(X)
         return self.out_linear(self.rms_out(X))
 
-
-
-
-
+def make_model(args):
+    model_hyperparameters = {
+        'd_model': args.d_model,
+        'num_heads': args.num_heads,
+        'd_ff': args.d_ff,
+        'vocab_size': args.vocab_size,
+        'context_length': args.context_length,
+        'num_layers': args.num_layers,
+        'embed_pdrop': args.embed_pdrop,
+        'attn_pdrop': args.attn_pdrop,
+        'residual_pdrop': args.residual_pdrop
+    }
+    model = TransformerLM(**model_hyperparameters)
+    if int(torch.__version__[0]) >= 2:
+        model = torch.compile(model)
+    return model
 
 
 

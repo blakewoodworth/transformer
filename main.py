@@ -3,7 +3,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 from data import DataLoader, prepare_tinystories
-from model import TransformerLM
+from model import make_model
 from utils import *
 from matplotlib import pyplot as plt
 
@@ -11,34 +11,17 @@ np.random.seed(1)
 torch.manual_seed(0)
 
 args = parse_arguments()
+vars(args)['total_steps'] = 5000
+
 setup_directories()
 prepare_tinystories()
 
-vars(args)['total_steps'] = 3000
-
 wandb.init(project='transformer-gpu', config=vars(args))
 
-if torch.cuda.is_available():
-	device = torch.device('cuda:0')
-else:
-	device = torch.device('cpu')
 
-model_hyperparameters = {
-	'd_model': args.d_model,
-	'num_heads': args.num_heads,
-	'd_ff': args.d_ff,
-	'vocab_size': args.vocab_size,
-	'context_length': args.context_length,
-	'num_layers': args.num_layers,
-	'embed_pdrop': args.embed_pdrop,
-	'attn_pdrop': args.attn_pdrop,
-	'residual_pdrop': args.residual_pdrop
-}
+device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
-if int(torch.__version__[0]) >= 2:
-	model = torch.compile(TransformerLM(**model_hyperparameters)).to(device)
-else:
-	model = TransformerLM(**model_hyperparameters).to(device)
+model = make_model(args).to(device)
 print(f"# model parameters: {round(sum(p.numel() for p in model.parameters())/1e6,2)}M")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr_max, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
@@ -68,13 +51,18 @@ for i in tqdm(range(1,args.total_steps+1)):
 	if args.gradient_clip is not None:
 		torch.nn.utils.clip_grad_norm_(model.parameters(), args.gradient_clip)
 
-	if i % args.eval_frequency == 0:
+	if i % args.eval_frequency == 0 or i == args.total_steps:
 		perplexity = calculate_perplexity(model, args)
 		wandb.log({'test_perplexity': perplexity}, commit=False)
-	
+
 	if i % args.checkpoint_frequency == 0 or i == args.total_steps:
 		outfile = args.checkpoint_path + f'checkpoint{i}.pt'
 		save_checkpoint(model, outfile)
 
-wandb.log({'test_perplexity': calculate_perplexity(model, args)}, commit=False)
 wandb.finish()
+
+
+
+
+
+
