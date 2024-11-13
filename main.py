@@ -14,8 +14,9 @@ args = parse_arguments()
 setup_directories()
 prepare_tinystories()
 
-if args.do_wandb:
-	wandb.init(project='transformer-gpu', config=vars(args))
+vars(args)['total_steps'] = 3000
+
+wandb.init(project='transformer-gpu', config=vars(args))
 
 if torch.cuda.is_available():
 	device = torch.device('cuda:0')
@@ -56,22 +57,24 @@ for i in tqdm(range(1,args.total_steps+1)):
 	loss = criterion(output.view(-1, args.vocab_size), Y.view(-1))
 	loss.backward()
 
-	if args.do_wandb:
-		param_norm = torch.sqrt(sum([torch.norm(p)**2 for p in model.parameters()])).item()
-		grad_norm = torch.sqrt(sum([torch.norm(p.grad)**2 for p in model.parameters()])).item()
+	param_norm = torch.sqrt(sum([torch.norm(p)**2 for p in model.parameters()])).item()
+	grad_norm = torch.sqrt(sum([torch.norm(p.grad)**2 for p in model.parameters()])).item()
+	wandb_dict = {'loss': loss.item(), 'param_norm': param_norm, 'grad_norm': grad_norm, 'stepsize': optimizer.param_groups[0]['lr']}
+	wandb.log(wandb_dict)
 
-		wandb_dict = {'loss': loss.item(), 'param_norm': param_norm, 'grad_norm': grad_norm, 'stepsize': optimizer.param_groups[0]['lr']}
-		wandb.log(wandb_dict)
+	optimizer.step()
+	scheduler.step()
 
 	if args.gradient_clip is not None:
 		torch.nn.utils.clip_grad_norm_(model.parameters(), args.gradient_clip)
 
-	optimizer.step()
-	scheduler.step()
+	if i % args.eval_frequency == 0:
+		perplexity = calculate_perplexity(model, args)
+		wandb.log({'test_perplexity': perplexity}, commit=False)
 	
 	if i % args.checkpoint_frequency == 0 or i == args.total_steps:
 		outfile = args.checkpoint_path + f'checkpoint{i}.pt'
-		save_checkpoint(model, optimizer, scheduler, outfile)
+		save_checkpoint(model, outfile)
 
-if args.do_wandb:
-	wandb.finish()
+wandb.log({'test_perplexity': calculate_perplexity(model, args)}, commit=False)
+wandb.finish()

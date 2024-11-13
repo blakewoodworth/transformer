@@ -19,17 +19,25 @@ def prepare_tinystories():
 	np.save('data/tinystories-test-tokenized.npy', test)
 
 class DataLoader():
-	def __init__(self, datafile:str, batch_size:int, context_length:int, random_seed:int=1):
+	def __init__(self, datafile:str, batch_size:int, context_length:int, random_seed:int=1, is_test=False):
 		self.batch_size = batch_size
 		self.context_length = context_length
 		self._batches_gotten = 0
 		self.dataset = np.load(datafile, mmap_mode='r')
-		self.random_state = np.random.RandomState(random_seed)
 		self.n = self.dataset.shape[0]
+
+		self.is_test = is_test
+		if not is_test:
+			self.random_state = np.random.RandomState(random_seed)
 
 	def get_batch(self):
 		self._batches_gotten += 1
-		idxs = self.random_state.choice(self.n-self.context_length-1, self.batch_size)
+		if not self.is_test:
+			idxs = self.random_state.choice(self.n-self.context_length-1, self.batch_size)
+		else:
+			if self._batches_gotten*self.batch_size >= self.n-self.context_length:
+				return None, None
+			idxs = np.arange((self._batches_gotten-1)*self.batch_size, self._batches_gotten*self.batch_size)
 		inputs = torch.IntTensor(np.array([self.dataset[i:i+self.context_length] for i in idxs], dtype='int32'))
 		outputs = torch.LongTensor(np.array([self.dataset[i+1:i+self.context_length+1] for i in idxs], dtype='int32'))
 		return inputs, outputs
