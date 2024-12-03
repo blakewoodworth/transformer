@@ -17,10 +17,7 @@ vars(args)['total_steps'] = 5000
 setup_directories()
 prepare_tinystories()
 
-wandb.init(project='transformer-v100', config=vars(args))
-
 device = get_device()
-
 model = make_model(args).to(device)
 print(f"# model parameters: {round(sum(p.numel() for p in model.parameters())/1e6,2)}M")
 
@@ -29,9 +26,9 @@ scheduler = CosineLRWithWarmup(optimizer, args.lr_max, args.lr_min, args.warmup_
 criterion = torch.nn.CrossEntropyLoss()
 trainloader = DataLoader(args.train_datafile, args.batch_size, args.context_length)
 
+wandb.init(project='transformer-v100', config=vars(args))
 
 t0 = time.time()
-
 model.train()
 for i in tqdm(range(1,args.total_steps+1)):
 
@@ -43,10 +40,8 @@ for i in tqdm(range(1,args.total_steps+1)):
 	loss = criterion(output.view(-1, args.vocab_size), Y.view(-1))
 	loss.backward()
 
-	# param_norm = torch.sqrt(sum([torch.norm(p)**2 for p in model.parameters()])).item()
-	# grad_norm = torch.sqrt(sum([torch.norm(p.grad)**2 for p in model.parameters()])).item()
 	time_elapsed = time.time()-t0
-	wandb_dict = {'loss': loss.item(), 'time': time_elapsed, 'avg_time_per_step': time_elapsed/i, 'stepsize': optimizer.param_groups[0]['lr']} # 'param_norm': param_norm, 'grad_norm': grad_norm, 
+	wandb_dict = {'loss': loss.item(), 'time': time_elapsed, 'avg_time_per_step': time_elapsed/i, 'stepsize': optimizer.param_groups[0]['lr']}
 	wandb.log(wandb_dict)
 
 	optimizer.step()
@@ -58,10 +53,6 @@ for i in tqdm(range(1,args.total_steps+1)):
 	if i % args.eval_frequency == 0 or i == args.total_steps:
 		perplexity = calculate_perplexity(model, args)
 		wandb.log({'test_perplexity': perplexity}, commit=False)
-
-	# if i % args.checkpoint_frequency == 0 or i == args.total_steps:
-	# 	outfile = args.checkpoint_path + f'checkpoint{i}.pt'
-	# 	save_checkpoint(model, outfile)
 
 wandb.finish()
 
