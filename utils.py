@@ -21,8 +21,8 @@ def parse_arguments():
 	argparser.add_argument('--context_length', type=int, default=256, help='Text context length')
 	argparser.add_argument('--total_tokens_processed', type=int, default=327680000, help='Total tokens processed')
 	argparser.add_argument('--eval_frequency', type=int, default=1000, help='Number of steps between evaluations')
-	argparser.add_argument('--checkpoint_frequency', type=int, default=10000, help='Number of steps between checkpoints')
-	argparser.add_argument('--checkpoint_path', type=str, default='checkpoints/', help='Path to checkpoint directory')
+	# argparser.add_argument('--checkpoint_frequency', type=int, default=10000, help='Number of steps between checkpoints')
+	# argparser.add_argument('--checkpoint_path', type=str, default='checkpoints/', help='Path to checkpoint directory')
 
 	# model hyperparameters
 	argparser.add_argument('--d_model', type=int, default=512, help='Model feature dimension')
@@ -57,6 +57,9 @@ def load_checkpoint(model:torch.nn.Module, infile:str):
 	model.eval()
 	model.load_state_dict(torch.load(infile))
 	model.train()
+
+def get_device():
+	return torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
 class CosineLRWithWarmup(torch.optim.lr_scheduler._LRScheduler):
 	def __init__(self, optimizer:torch.optim.Optimizer, lr_max:float, lr_min:float, warmup_steps:int, total_steps:int):
