@@ -51,8 +51,11 @@ for i in tqdm(range(1,args.total_steps+1)):
 		torch.nn.utils.clip_grad_norm_(model.parameters(), args.gradient_clip)
 
 	if i % args.eval_frequency == 0 or i == args.total_steps:
+		eval_t0 = time.time()
 		perplexity = calculate_perplexity(model, args)
 		wandb.log({'test_perplexity': perplexity}, commit=False)
+		eval_time = time.time() - eval_t0
+		t0 += eval_time
 
 wandb.finish()
 
