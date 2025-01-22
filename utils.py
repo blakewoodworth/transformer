@@ -7,7 +7,7 @@ from tqdm import tqdm
 from data import DataLoader
 
 def setup_directories():
-    for dirname in ['./checkpoints', './data']:
+    for dirname in ['/mnt/sdd/data/checkpoints', '/mnt/sdd/data']:
         if not os.path.isdir(dirname):
             os.mkdir(dirname)
 
@@ -79,19 +79,6 @@ class CosineLRWithWarmup(torch.optim.lr_scheduler._LRScheduler):
             lr = self.lr_min + 0.5*(self.lr_max - self.lr_min)*(1 + math.cos((self._step_count - self.warmup_steps) * self.cos_factor))
         else:
             lr = self.lr_min
-        return [lr for group in self.optimizer.param_groups]
-
-class SineLR(torch.optim.lr_scheduler._LRScheduler):
-    def __init__(self, optimizer:torch.optim.Optimizer, lr_max:float, lr_min:float, periods:float, total_steps:int):
-        self.lr_max = lr_max
-        self.lr_min = lr_min
-        self.sine_factor = 2*periods*math.pi/total_steps
-        self.total_steps = total_steps
-        verbose = 'deprecated' if int(torch.__version__[0]) == 2 else False
-        super().__init__(optimizer, -1, verbose)
-
-    def get_lr(self):
-        lr = self.lr_min + 0.5*(self.lr_max - self.lr_min)*(1 + math.sin(self.sine_factor*self._step_count - math.pi/2))
         return [lr for group in self.optimizer.param_groups]
 
 def calculate_perplexity(model, args):
